@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>WebGL Example</title>
+
+		<script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
+			in vec4 vPosition;
+			in vec4 vColor;
+			out vec4 vfColor;
+
+			void main()
+			{
+				const mat4 viewMatrix = mat4(
+					0.1767766922712326, -0.0589255653321743, -0.013334667310118675, 0,
+					0, 0.2357022613286972, -0.006667333655059338, 0,
+					-0.1767766922712326, -0.0589255653321743, -0.013334667310118675, 0,
+					0, 0, -0.8801880478858948, 1);
+
+				vfColor = vColor;
+				// gl_Position = vPosition;
+				gl_Position = viewMatrix * vPosition;
+			}
+		</script>
+		<script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
+			precision mediump float;
+
+			in vec4 vfColor;
+			out vec4 fColor;
+
+			void main()
+			{
+				fColor = vfColor;
+			}
+		</script>
+		<script type="text/javascript" src="common/initShaders.js"></script>
+		<script type="text/javascript" src="common/objects3D.js"></script>
+	</head>
+	<body>
+		<h1>Lorem Ipsum</h1>
+
+		<canvas id="gl-canvas" width="512" height="512">
+			If you see this, your browser doesn't support WebGL.
+		</canvas>
+
+		<script src="main.js" type="text/javascript"></script>
+	</body>
+</html>
