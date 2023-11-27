@@ -7,19 +7,21 @@
 		<script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
 			in vec4 vPosition;
 			in vec4 vColor;
+
+			// TODO 1.1: Erstelle Uniform-Variable für die Model Matrix
+			// TODO 2.1: Erstelle Uniform-Variable für die View-Matrix
+			uniform mat4 uModelMatrix;
+			uniform mat4 uViewRotationMatrix;
+			uniform mat4 uViewTranslationMatrix;
+			uniform mat4 uProjectionMatrix;
+
 			out vec4 vfColor;
 
 			void main()
 			{
-				const mat4 viewMatrix = mat4(
-					0.1767766922712326, -0.0589255653321743, -0.013334667310118675, 0,
-					0, 0.2357022613286972, -0.006667333655059338, 0,
-					-0.1767766922712326, -0.0589255653321743, -0.013334667310118675, 0,
-					0, 0, -0.8801880478858948, 1);
-
 				vfColor = vColor;
-				// gl_Position = vPosition;
-				gl_Position = viewMatrix * vPosition;
+				// TODO 1.2 + 2.2: Transformiere Vertexposition mit Model und View Matrix
+				gl_Position = uProjectionMatrix * uViewTranslationMatrix * uViewRotationMatrix * uModelMatrix * vPosition;
 			}
 		</script>
 		<script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
@@ -34,12 +36,13 @@
 			}
 		</script>
 		<script type="text/javascript" src="common/initShaders.js"></script>
+		<script type="text/javascript" src="common/gl-matrix.js"></script>
 		<script type="text/javascript" src="common/objects3D.js"></script>
 	</head>
 	<body>
 		<h1>Lorem Ipsum</h1>
 
-		<canvas id="gl-canvas" width="512" height="512">
+		<canvas id="gl-canvas" width="1024" height="512">
 			If you see this, your browser doesn't support WebGL.
 		</canvas>
 
