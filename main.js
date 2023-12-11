@@ -10,7 +10,8 @@ let eye, target, up;
 let objects = [];
 let posLoc, normalLoc, modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 
-let lightPositionLoc,
+let lightPosition,
+  lightPositionLoc,
   IaLoc,
   IdLoc,
   IsLoc,
@@ -57,9 +58,6 @@ function main() {
   canvas.addEventListener("mousemove", dragCameraMovementXZ);
   canvas.addEventListener("wheel", scrollCameraMovementZ, true);
 
-  // Only clear once
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
   render();
 }
 
@@ -81,7 +79,8 @@ function setupMatrices() {
   ksLoc = gl.getUniformLocation(program, "ks");
   specularExponentLoc = gl.getUniformLocation(program, "specExp");
 
-  gl.uniform3fv(lightPositionLoc, [1.0, 2.0, 1.0]);
+  lightPosition = [1.0, 2.0, 1.0];
+  gl.uniform3fv(lightPositionLoc, lightPosition);
   gl.uniform3fv(IaLoc, [0.3, 0.3, 0.3]);
   gl.uniform3fv(IdLoc, [0.8, 0.8, 0.8]);
   gl.uniform3fv(IsLoc, [0.7, 0.7, 0.7]);
@@ -107,6 +106,7 @@ function setupMatrices() {
 function setupObjects() {
   const island = new Island();
   const river = new River();
+  const sun = new Sun();
 
   const treeInFrontLeft = new Tree();
   const treeInFrontRight = new Tree();
@@ -120,6 +120,10 @@ function setupObjects() {
     position: [0, 0.04, 1.8],
     orientation: [0, 185, 0],
     scale: [0.11, 0.11, 0.11],
+  });
+  sun.setModelMatrix({
+    position: lightPosition,
+    scale: [0.1, 0.1, 0.1],
   });
 
   treeInFrontLeft.setModelMatrix({
@@ -155,6 +159,7 @@ function setupObjects() {
   objects.push(
     island,
     river,
+    sun,
     treeInFrontLeft,
     treeInFrontRight,
     treeInBackMiddle,
@@ -165,6 +170,8 @@ function setupObjects() {
 }
 
 function render() {
+  // Only clear once
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   objects.forEach((o) => o.render());
   updateUniforms();
   requestAnimationFrame(render);
