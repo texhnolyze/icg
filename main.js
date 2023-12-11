@@ -89,6 +89,7 @@ function setupMatrices() {
 
 function setupObjects() {
   const island = new Island();
+  const river = new River();
 
   const treeInFrontLeft = new Tree();
   const treeInFrontRight = new Tree();
@@ -97,6 +98,12 @@ function setupObjects() {
   const cloudBehindIsland = new Cloud();
   const cloudOutsideIsland = new Cloud();
   const cloudOverIsland = new Cloud();
+
+  river.setModelMatrix({
+    position: [0, 0.04, 1.8],
+    orientation: [0, 185, 0],
+    scale: [0.11, 0.11, 0.11],
+  });
 
   treeInFrontLeft.setModelMatrix({
     position: [-1, 0.5, 0.5],
@@ -130,6 +137,7 @@ function setupObjects() {
 
   objects.push(
     island,
+    river,
     treeInFrontLeft,
     treeInFrontRight,
     treeInBackMiddle,
