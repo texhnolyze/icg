@@ -8,7 +8,12 @@ let viewMatrix, projectionMatrix;
 let eye, target, up;
 
 let objects = [];
-let posLoc, colorLoc, modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
+let posLoc,
+  normalLoc,
+  colorLoc,
+  modelMatrixLoc,
+  viewMatrixLoc,
+  projectionMatrixLoc;
 
 const movementSpeed = 0.02;
 const mouseMovementScaler = 0.002;
@@ -57,6 +62,7 @@ function main() {
 function setupMatrices() {
   // Get locations of shader variables
   posLoc = gl.getAttribLocation(program, "vPosition");
+  normalLoc = gl.getAttribLocation(program, "vNormal");
   colorLoc = gl.getAttribLocation(program, "vColor");
 
   modelMatrixLoc = gl.getUniformLocation(program, "uModelMatrix");
