@@ -44,6 +44,7 @@ function main() {
 
   canvas.addEventListener("mousedown", () => (isMouseDown = true));
   canvas.addEventListener("mouseup", () => (isMouseDown = false));
+  canvas.addEventListener("mousemove", mouseMoveCameraRotationY);
   canvas.addEventListener("mousemove", dragCameraMovementXZ);
   canvas.addEventListener("wheel", scrollCameraMovementZ, true);
 
@@ -164,6 +165,11 @@ function keyCameraMovementXZ({ key }) {
       rotateCameraY(-movementSpeed);
       break;
   }
+}
+
+function mouseMoveCameraRotationY({ movementX }) {
+  if (isMouseDown) return;
+  rotateCameraY(-movementX * mouseMovementScaler);
 }
 
 function scrollCameraMovementZ(event) {
