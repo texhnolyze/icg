@@ -8,12 +8,16 @@ let viewMatrix, projectionMatrix;
 let eye, target, up;
 
 let objects = [];
-let posLoc,
-  normalLoc,
-  colorLoc,
-  modelMatrixLoc,
-  viewMatrixLoc,
-  projectionMatrixLoc;
+let posLoc, normalLoc, modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
+
+let lightPositionLoc,
+  IaLoc,
+  IdLoc,
+  IsLoc,
+  kaLoc,
+  kdLoc,
+  ksLoc,
+  specularExponentLoc;
 
 const movementSpeed = 0.02;
 const mouseMovementScaler = 0.002;
@@ -63,11 +67,24 @@ function setupMatrices() {
   // Get locations of shader variables
   posLoc = gl.getAttribLocation(program, "vPosition");
   normalLoc = gl.getAttribLocation(program, "vNormal");
-  colorLoc = gl.getAttribLocation(program, "vColor");
 
   modelMatrixLoc = gl.getUniformLocation(program, "uModelMatrix");
   viewMatrixLoc = gl.getUniformLocation(program, "uViewMatrix");
   projectionMatrixLoc = gl.getUniformLocation(program, "uProjectionMatrix");
+
+  lightPositionLoc = gl.getUniformLocation(program, "lightPosition");
+  IaLoc = gl.getUniformLocation(program, "Ia");
+  IdLoc = gl.getUniformLocation(program, "Id");
+  IsLoc = gl.getUniformLocation(program, "Is");
+  kaLoc = gl.getUniformLocation(program, "ka");
+  kdLoc = gl.getUniformLocation(program, "kd");
+  ksLoc = gl.getUniformLocation(program, "ks");
+  specularExponentLoc = gl.getUniformLocation(program, "specExp");
+
+  gl.uniform3fv(lightPositionLoc, [1.0, 2.0, 1.0]);
+  gl.uniform3fv(IaLoc, [0.3, 0.3, 0.3]);
+  gl.uniform3fv(IdLoc, [0.8, 0.8, 0.8]);
+  gl.uniform3fv(IsLoc, [0.7, 0.7, 0.7]);
 
   eye = vec3.fromValues(0.0, 0.3, 4.0);
   target = vec3.fromValues(0.0, 0.3, 0.0);

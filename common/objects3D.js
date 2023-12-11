@@ -1,16 +1,25 @@
 const defaultPosition = [0, 0, 0];
 const defaultOrientation = [0, 0, 0];
 const defaultScale = [1, 1, 1];
+const defaultColorCoefficients = [0.5, 0.5, 0.5];
 
 class Object3D {
-  constructor() {
+  constructor(
+    coefficients = {
+      ka: defaultColorCoefficients,
+      kd: defaultColorCoefficients,
+      ks: defaultColorCoefficients,
+    },
+    specularExponent = 4.0
+  ) {
     this.posVBO = gl.createBuffer();
-    this.colorVBO = gl.createBuffer();
     this.indexVBO = gl.createBuffer();
 
     this.positions = [];
     this.indices = [];
-    this.colors = [];
+
+    this.lightingCoefficients = coefficients;
+    this.specularExponent = specularExponent;
 
     this.position = [];
     this.orientation = [];
@@ -25,13 +34,6 @@ class Object3D {
     gl.bufferData(
       gl.ARRAY_BUFFER,
       new Float32Array(this.positions),
-      gl.STATIC_DRAW
-    );
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorVBO);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array(this.colors),
       gl.STATIC_DRAW
     );
 
@@ -53,8 +55,6 @@ class Object3D {
     this.orientation = orientation.map((angle) => (angle * Math.PI) / 180);
     this.scale = scale;
 
-    // TODO 1.6: Integriere nach dem Vorbild der Translation auch die Orientierung
-    // und Skalierung in die Model Matrix (mit Funktionen aus gl-matrix.js)
     mat4.translate(this.modelMatrix, this.modelMatrix, position);
 
     this.orientation.forEach((radian, index) => {
@@ -67,8 +67,12 @@ class Object3D {
   }
 
   updateUniforms() {
-    // TODO 1.7: Übergebe die aktuelle modelMatrix an den Shader (siehe Präsenzaufgabe 6)
     gl.uniformMatrix4fv(modelMatrixLoc, false, this.modelMatrix);
+
+    gl.uniform3fv(kaLoc, this.lightingCoefficients.ka);
+    gl.uniform3fv(kdLoc, this.lightingCoefficients.kd);
+    gl.uniform3fv(ksLoc, this.lightingCoefficients.ks);
+    gl.uniform1f(specularExponentLoc, this.specularExponent);
   }
 
   render() {
@@ -83,11 +87,6 @@ class Object3D {
 
     this.updateUniforms();
 
-    // Link data in VBO to shader variables
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorVBO);
-    gl.enableVertexAttribArray(colorLoc);
-    gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 0, 0);
-
     // Render
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexVBO);
     gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0);
@@ -96,7 +95,11 @@ class Object3D {
 
 class Island extends Object3D {
   constructor() {
-    super();
+    super({
+      ka: [0.4, 0.2, 0.0],
+      kd: [0.6, 0.3, 0.0],
+      ks: [0.7, 0.7, 0.7],
+    });
 
     // prettier-ignore
     this.positions = [
@@ -781,18 +784,13 @@ class Island extends Object3D {
       500, 501, 502,
     ];
 
-    this.colors = [];
-    for (var i = 0; i < this.positions.length; i += 3) {
-      this.colors.push(0.4, 0.2, 0.0, 0.95);
-    }
-
     this.initBuffers();
   }
 }
 
 class River extends Object3D {
   constructor() {
-    super();
+    super({ ka: [0.0, 0.0, 0.5], kd: [0, 0, 0.8], ks: [0.9, 0.67, 0.2] });
 
     // prettier-ignore
     this.positions = [
@@ -838,18 +836,13 @@ class River extends Object3D {
       16, 17, 18, // additional for waterfall
     ];
 
-    this.colors = [];
-    for (var i = 0; i < this.positions.length; i += 3) {
-      this.colors.push(0.0, 0.0, 0.5, 1);
-    }
-
     this.initBuffers();
   }
 }
 
 class Tree extends Object3D {
   constructor() {
-    super();
+    super({ ka: [0.2, 0.5, 0.0], kd: [0.4, 0.8, 0.2], ks: [0.6, 0.9, 0.2] });
 
     // prettier-ignore
     this.positions = [
@@ -2272,24 +2265,13 @@ class Tree extends Object3D {
       257, 353, 354,
     ];
 
-    const offsetVertices = 132;
-    const numberOfVertices = this.positions.length / 6;
-    this.colors = [];
-    for (let i = 0; i < numberOfVertices - offsetVertices; i++) {
-      this.colors.push(0.8, 0.6, 0.3, 1);
-    }
-
-    for (let i = numberOfVertices - offsetVertices; i < numberOfVertices; i++) {
-      this.colors.push(0.3, 0.6, 0.3, 1);
-    }
-
     this.initBuffers();
   }
 }
 
 class Cloud extends Object3D {
   constructor() {
-    super();
+    super({ ka: [0.9, 0.9, 0.9], kd: [0.9, 0.9, 0.9], ks: [1.0, 1.0, 1.0] });
 
     // prettier-ignore
     this.positions = [
@@ -4736,12 +4718,6 @@ class Cloud extends Object3D {
       656, 589, 588,
       605, 601, 598,
     ];
-
-    const numberOfVertices = this.positions.length / 3;
-    this.colors = [];
-    for (let i = 0; i < numberOfVertices; i++) {
-      this.colors.push(0.9, 0.9, 0.9, 1.0);
-    }
 
     this.initBuffers();
   }
