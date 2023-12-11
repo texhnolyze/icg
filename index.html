@@ -8,11 +8,8 @@
 			in vec4 vPosition;
 			in vec4 vColor;
 
-			// TODO 1.1: Erstelle Uniform-Variable für die Model Matrix
-			// TODO 2.1: Erstelle Uniform-Variable für die View-Matrix
 			uniform mat4 uModelMatrix;
-			uniform mat4 uViewRotationMatrix;
-			uniform mat4 uViewTranslationMatrix;
+			uniform mat4 uViewMatrix;
 			uniform mat4 uProjectionMatrix;
 
 			out vec4 vfColor;
@@ -20,8 +17,7 @@
 			void main()
 			{
 				vfColor = vColor;
-				// TODO 1.2 + 2.2: Transformiere Vertexposition mit Model und View Matrix
-				gl_Position = uProjectionMatrix * uViewTranslationMatrix * uViewRotationMatrix * uModelMatrix * vPosition;
+				gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vPosition;
 			}
 		</script>
 		<script id="fragment-shader" type="x-shader/x-fragment">#version 300 es

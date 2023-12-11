@@ -1,24 +1,30 @@
 let gl;
 let program;
+let canvas;
 const { vec3, mat4 } = glMatrix;
+const { toRadian } = glMatrix.glMatrix;
+
+let viewMatrix, projectionMatrix;
+let eye, target, up;
 
 let objects = [];
-let posLoc,
-  colorLoc,
-  modelMatrixLoc,
-  viewTranslationMatrixLoc,
-  viewRotationMatrixLoc,
-  projectionMatrixLoc;
+let posLoc, colorLoc, modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 
-// TODO: 2.4: Führe globale Variablen ein für Werte, die in verschiedenen Funktionen benötigt werden
-let modelMatrix, viewTranslationMatrix, viewRotationMatrix, projectionMatrix;
 const movementSpeed = 0.02;
+const mouseMovementScaler = 0.002;
 
 let isMouseDown = false;
 
+const MOVEMENT_DIRECTION = {
+  FORWARD: 0,
+  BACKWARD: 1,
+  RIGHT: 2,
+  LEFT: 3,
+};
+
 function main() {
   // Get canvas and setup WebGL context
-  const canvas = document.getElementById("gl-canvas");
+  canvas = document.getElementById("gl-canvas");
   gl = canvas.getContext("webgl2");
 
   // Configure viewport
@@ -34,13 +40,15 @@ function main() {
   setupMatrices();
   setupObjects();
 
-  // TODO 2.8: Füge einen Event Listener für Tastatureingaben hinzu
   document.addEventListener("keypress", keyCameraMovementXZ);
 
   canvas.addEventListener("mousedown", () => (isMouseDown = true));
   canvas.addEventListener("mouseup", () => (isMouseDown = false));
   canvas.addEventListener("mousemove", dragCameraMovementXZ);
   canvas.addEventListener("wheel", scrollCameraMovementZ, true);
+
+  // Only clear once
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   render();
 }
@@ -50,40 +58,31 @@ function setupMatrices() {
   posLoc = gl.getAttribLocation(program, "vPosition");
   colorLoc = gl.getAttribLocation(program, "vColor");
 
-  // TODO 1.3 + 2.3: Bestimme Locations der Shadervariablen für Model und View Matrix (Siehe Präsenzaufgaben)
   modelMatrixLoc = gl.getUniformLocation(program, "uModelMatrix");
-  viewRotationMatrixLoc = gl.getUniformLocation(program, "uViewRotationMatrix");
-  viewTranslationMatrixLoc = gl.getUniformLocation(
-    program,
-    "uViewTranslationMatrix"
-  );
+  viewMatrixLoc = gl.getUniformLocation(program, "uViewMatrix");
   projectionMatrixLoc = gl.getUniformLocation(program, "uProjectionMatrix");
 
-  // TODO 2.5: Erstelle mithilfe der Funktionen aus gl-matrix.js eine initiale View Matrix (fromValues(...))
-  // Frontsicht mit Blick auf die xy-Ebene
-  const eye = vec3.fromValues(0, 0.4, 3.5);
-  const target = vec3.fromValues(0, 0, 0);
-  const up = vec3.fromValues(0, 1, 0);
-  // Draufsicht mit Blick auf die xz-Ebene
-  // eye = vec3.fromValues(0, 4, 0);
-  // target = vec3.fromValues(0, 0, 0);
-  // up = vec3.fromValues(0, 0, -1);
-  viewTranslationMatrix = mat4.create();
-  mat4.lookAt(viewTranslationMatrix, eye, target, up);
+  eye = vec3.fromValues(0.0, 0.3, 4.0);
+  target = vec3.fromValues(0.0, 0.3, 0.0);
+  up = vec3.fromValues(0.0, 1.0, 0.0);
 
-  viewRotationMatrix = mat4.create();
+  viewMatrix = mat4.create();
+  mat4.lookAt(viewMatrix, eye, target, up);
 
-  projectionMatrix = mat4.create();
-  mat4.perspective(projectionMatrix, 90.0, 2.0, 0.0001, 1000.0);
+  projectionMatrix = mat4.perspective(
+    mat4.create(),
+    toRadian(45.0),
+    canvas.width / canvas.height,
+    0.0001,
+    1000.0
+  );
 
-  // TODO 2.6: Übergebe die initiale View Matrix an den Shader
   updateUniforms();
 }
 
 function setupObjects() {
   const island = new Island();
 
-  // TODO 1.5: Erstelle mehrere Baum-/Wolkeninstanzen und einen Fluss
   const treeInFrontLeft = new Tree();
   const treeInFrontRight = new Tree();
   const treeInBackMiddle = new Tree();
@@ -92,8 +91,6 @@ function setupObjects() {
   const cloudOutsideIsland = new Cloud();
   const cloudOverIsland = new Cloud();
 
-  // TODO 1.8: Rufe für jedes Objekt die Methode 'SetModelMatrix(position, orientation, scale)' auf und
-  // positioniere das Objekt auf diese Weise auf der Insel
   treeInFrontLeft.setModelMatrix({
     position: [-1, 0.5, 0.5],
     scale: [0.2, 0.2, 0.2],
@@ -136,34 +133,29 @@ function setupObjects() {
 }
 
 function render() {
-  // Only clear once
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   objects.forEach((o) => o.render());
   updateUniforms();
   requestAnimationFrame(render);
 }
 
 function updateUniforms() {
-  gl.uniformMatrix4fv(viewTranslationMatrixLoc, false, viewTranslationMatrix);
-  gl.uniformMatrix4fv(viewRotationMatrixLoc, false, viewRotationMatrix);
+  gl.uniformMatrix4fv(viewMatrixLoc, false, viewMatrix);
   gl.uniformMatrix4fv(projectionMatrixLoc, false, projectionMatrix);
 }
 
-// TODO 2.7: Erstelle einen Event-Handler, der anhand von WASD-Tastatureingaben
-// die View Matrix anpasst
 function keyCameraMovementXZ({ key }) {
   switch (key) {
     case "w":
-      translateViewMatrix([0, 0, movementSpeed]);
+      moveCamera(MOVEMENT_DIRECTION.FORWARD, movementSpeed);
       break;
     case "s":
-      translateViewMatrix([0, 0, -movementSpeed]);
+      moveCamera(MOVEMENT_DIRECTION.BACKWARD, movementSpeed);
       break;
     case "d":
-      translateViewMatrix([-movementSpeed, 0, 0]);
+      moveCamera(MOVEMENT_DIRECTION.RIGHT, movementSpeed);
       break;
     case "a":
-      translateViewMatrix([movementSpeed, 0, 0]);
+      moveCamera(MOVEMENT_DIRECTION.LEFT, movementSpeed);
       break;
     case "q":
       rotateCameraY(movementSpeed);
@@ -176,21 +168,60 @@ function keyCameraMovementXZ({ key }) {
 
 function scrollCameraMovementZ(event) {
   const scrollDirection = Math.sign(-event.deltaY);
-  translateViewMatrix([0, 0, scrollDirection * 2 * movementSpeed]);
+  const movementDirection =
+    scrollDirection === 1
+      ? MOVEMENT_DIRECTION.FORWARD
+      : MOVEMENT_DIRECTION.BACKWARD;
+
+  moveCamera(movementDirection, movementSpeed);
 }
 
 function dragCameraMovementXZ({ movementX, movementY }) {
   if (!isMouseDown) return;
-  rotateCameraY(movementX * 0.002);
-  translateViewMatrix([0, 0, movementY * 0.002]);
+  const xMovementDirection =
+    Math.sign(movementX) === 1
+      ? MOVEMENT_DIRECTION.LEFT
+      : MOVEMENT_DIRECTION.RIGHT;
+
+  moveCamera(xMovementDirection, Math.abs(movementX * mouseMovementScaler));
+
+  const yMovementDirection =
+    Math.sign(-movementY) === 1
+      ? MOVEMENT_DIRECTION.FORWARD
+      : MOVEMENT_DIRECTION.BACKWARD;
+
+  moveCamera(yMovementDirection, Math.abs(movementY * mouseMovementScaler));
 }
 
 function rotateCameraY(angle) {
-  mat4.rotateY(viewRotationMatrix, viewRotationMatrix, angle);
+  vec3.rotateY(target, target, eye, angle);
+  mat4.lookAt(viewMatrix, eye, target, up);
 }
 
-function translateViewMatrix(translation) {
-  mat4.translate(viewTranslationMatrix, viewTranslationMatrix, translation);
+function moveCamera(direction, speed = 1) {
+  // get the look direction vector by subtracting the eye from the target
+  const movement = vec3.sub(vec3.create(), target, eye);
+  vec3.scale(movement, movement, speed);
+
+  if (direction === MOVEMENT_DIRECTION.FORWARD) {
+    vec3.add(eye, eye, movement);
+    vec3.add(target, target, movement);
+  } else if (direction === MOVEMENT_DIRECTION.BACKWARD) {
+    vec3.sub(eye, eye, movement);
+    vec3.sub(target, target, movement);
+  } else if (direction === MOVEMENT_DIRECTION.LEFT) {
+    eye[0] += movement[2];
+    eye[2] -= movement[0];
+    target[0] += movement[2];
+    target[2] -= movement[0];
+  } else if (direction === MOVEMENT_DIRECTION.RIGHT) {
+    eye[0] -= movement[2];
+    eye[2] += movement[0];
+    target[0] -= movement[2];
+    target[2] += movement[0];
+  }
+
+  mat4.lookAt(viewMatrix, eye, target, up);
 }
 
 main();
