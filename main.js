@@ -85,7 +85,7 @@ function setupMatrices() {
   gl.uniform3fv(IdLoc, [0.8, 0.8, 0.8]);
   gl.uniform3fv(IsLoc, [0.7, 0.7, 0.7]);
 
-  eye = vec3.fromValues(0.0, 0.3, 4.0);
+  eye = vec3.fromValues(0.0, 1.0, 6);
   target = vec3.fromValues(0.0, 0.3, 0.0);
   up = vec3.fromValues(0.0, 1.0, 0.0);
 
