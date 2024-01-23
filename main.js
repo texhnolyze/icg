@@ -21,7 +21,7 @@ let lightPosition,
   specularExponentLoc;
 
 const movementSpeed = 0.02;
-const mouseMovementScaler = 0.002;
+const mouseMovementScaler = 0.004;
 
 let isMouseDown = false;
 
@@ -96,8 +96,8 @@ function setupMatrices() {
     mat4.create(),
     toRadian(45.0),
     canvas.width / canvas.height,
-    0.0001,
-    1000.0
+    0.5,
+    100.0
   );
 
   gameLoop();
