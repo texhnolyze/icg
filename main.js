@@ -10,15 +10,7 @@ let eye, target, up;
 let objects = [];
 let viewMatrixLoc, projectionMatrixLoc;
 
-let lightPosition,
-  lightPositionLoc,
-  IaLoc,
-  IdLoc,
-  IsLoc,
-  kaLoc,
-  kdLoc,
-  ksLoc,
-  specularExponentLoc;
+let lightPosition;
 
 const movementSpeed = 0.02;
 const mouseMovementScaler = 0.004;
@@ -158,9 +150,9 @@ function setupObjects() {
 
     // Set position und intensity of the light source
     gl.uniform3fv(object.lightPositionLoc, lightPosition);
-    gl.uniform3fv(object.IaLoc, [0.4, 0.4, 0.4]);
-    gl.uniform3fv(object.IdLoc, [0.8, 0.8, 0.8]);
-    gl.uniform3fv(object.IsLoc, [1.0, 1.0, 1.0]);
+    gl.uniform4fv(object.IaLoc, [0.4, 0.4, 0.4, 1.0]);
+    gl.uniform4fv(object.IdLoc, [0.8, 0.8, 0.8, 1.0]);
+    gl.uniform4fv(object.IsLoc, [1.0, 1.0, 1.0, 1.0]);
   }
 }
 

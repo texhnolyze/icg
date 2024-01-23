@@ -1,7 +1,7 @@
 const defaultPosition = [0, 0, 0];
 const defaultOrientation = [0, 0, 0];
 const defaultScale = [1, 1, 1];
-const defaultColorCoefficients = [0.5, 0.5, 0.5];
+const defaultColorCoefficients = [0.5, 0.5, 0.5, 1.0];
 
 class Object3D {
   constructor(
@@ -93,9 +93,9 @@ class Object3D {
 
     gl.uniformMatrix4fv(this.modelMatrixLoc, false, this.modelMatrix);
 
-    gl.uniform3fv(this.kaLoc, this.lightingCoefficients.ka);
-    gl.uniform3fv(this.kdLoc, this.lightingCoefficients.kd);
-    gl.uniform3fv(this.ksLoc, this.lightingCoefficients.ks);
+    gl.uniform4fv(this.kaLoc, this.lightingCoefficients.ka);
+    gl.uniform4fv(this.kdLoc, this.lightingCoefficients.kd);
+    gl.uniform4fv(this.ksLoc, this.lightingCoefficients.ks);
     gl.uniform1f(this.specularExponentLoc, this.specularExponent);
   }
 
@@ -127,9 +127,9 @@ class Object3D {
 class Island extends Object3D {
   constructor(program) {
     super(program, {
-      ka: [0.4, 0.2, 0.0],
-      kd: [0.6, 0.3, 0.0],
-      ks: [0.7, 0.7, 0.7],
+      ka: [0.4, 0.2, 0.0, 1.0],
+      kd: [0.6, 0.3, 0.3, 1.0],
+      ks: [0.7, 0.7, 0.7, 1.0],
     });
 
     // prettier-ignore
@@ -822,9 +822,9 @@ class Island extends Object3D {
 class River extends Object3D {
   constructor(program) {
     super(program, {
-      ka: [0.0, 0.0, 0.5],
-      kd: [0, 0, 0.8],
-      ks: [0.9, 0.67, 0.2],
+      ka: [0.2, 0.2, 1.0, 1.0],
+      kd: [0.4, 0.4, 0.8, 1.0],
+      ks: [0.5, 0.5, 0.9, 1.0],
     });
 
     // prettier-ignore
@@ -878,9 +878,9 @@ class River extends Object3D {
 class Tree extends Object3D {
   constructor(program) {
     super(program, {
-      ka: [0.2, 0.5, 0.0],
-      kd: [0.4, 0.8, 0.2],
-      ks: [0.6, 0.9, 0.2],
+      ka: [0.2, 0.5, 0.0, 1.0],
+      kd: [0.4, 0.8, 0.2, 1.0],
+      ks: [0.2, 0.2, 0.5, 1.0],
     });
 
     // prettier-ignore
@@ -2311,9 +2311,9 @@ class Tree extends Object3D {
 class Cloud extends Object3D {
   constructor(program) {
     super(program, {
-      ka: [0.9, 0.9, 0.9],
-      kd: [0.9, 0.9, 0.9],
-      ks: [1.0, 1.0, 1.0],
+      ka: [0.9, 0.9, 0.9, 1.0],
+      kd: [0.9, 0.9, 0.9, 1.0],
+      ks: [1.0, 1.0, 1.0, 1.0],
     });
 
     // prettier-ignore
@@ -4768,7 +4768,11 @@ class Cloud extends Object3D {
 
 class Sun extends Object3D {
   constructor(program) {
-    super(program, { ka: [1, 0.8, 0.0], kd: [1, 0.8, 0.0], ks: [1, 0.8, 0.0] });
+    super(program, {
+      ka: [1, 0.8, 0.0, 1.0],
+      kd: [1, 0.8, 0.0, 1.0],
+      ks: [1, 0.8, 0.0, 1.0],
+    });
 
     // prettier-ignore
     this.positions = [
