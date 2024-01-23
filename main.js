@@ -86,7 +86,7 @@ function setupMatrices() {
   gl.uniform3fv(IsLoc, [0.7, 0.7, 0.7]);
 
   eye = vec3.fromValues(0.0, 1.0, 6);
-  target = vec3.fromValues(0.0, 0.3, 0.0);
+  target = vec3.fromValues(0.0, 1.0, 0.0);
   up = vec3.fromValues(0.0, 1.0, 0.0);
 
   viewMatrix = mat4.create();
