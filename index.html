@@ -67,7 +67,7 @@
 				float d = length(light.xyz - position.xyz);
 				float f_att = min(1.0 / (c_1 + c_2 * d + c_3 * d * d), 1.0);
 
-				vfColor = ambientIntensity + diffuseIntensity + f_att * specularIntensity;
+				vfColor = ambientIntensity + f_att * (diffuseIntensity + specularIntensity);
 				gl_Position = uProjectionMatrix * position;
 			}
 		</script>
