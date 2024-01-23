@@ -5,6 +5,7 @@ const defaultColorCoefficients = [0.5, 0.5, 0.5];
 
 class Object3D {
   constructor(
+    program,
     coefficients = {
       ka: defaultColorCoefficients,
       kd: defaultColorCoefficients,
@@ -26,6 +27,27 @@ class Object3D {
     this.scale = [];
 
     this.modelMatrix = mat4.create();
+
+    this.shader = program;
+    gl.useProgram(this.shader);
+
+    this.posLoc = gl.getAttribLocation(this.shader, "vPosition");
+    this.normalLoc = gl.getAttribLocation(this.shader, "vNormal");
+    this.modelMatrixLoc = gl.getUniformLocation(this.shader, "uModelMatrix");
+    this.viewMatrixLoc = gl.getUniformLocation(this.shader, "uViewMatrix");
+    this.projectionMatrixLoc = gl.getUniformLocation(
+      this.shader,
+      "uProjectionMatrix"
+    );
+    this.lightPositionLoc = gl.getUniformLocation(this.shader, "lightPosition");
+    this.IaLoc = gl.getUniformLocation(this.shader, "Ia");
+    this.IdLoc = gl.getUniformLocation(this.shader, "Id");
+    this.IsLoc = gl.getUniformLocation(this.shader, "Is");
+    this.kaLoc = gl.getUniformLocation(this.shader, "ka");
+    this.kdLoc = gl.getUniformLocation(this.shader, "kd");
+    this.ksLoc = gl.getUniformLocation(this.shader, "ks");
+    this.specularExponentLoc = gl.getUniformLocation(this.shader, "specExp");
+
     this.setModelMatrix();
   }
 
@@ -67,23 +89,32 @@ class Object3D {
   }
 
   updateUniforms() {
-    gl.uniformMatrix4fv(modelMatrixLoc, false, this.modelMatrix);
+    gl.useProgram(this.shader);
 
-    gl.uniform3fv(kaLoc, this.lightingCoefficients.ka);
-    gl.uniform3fv(kdLoc, this.lightingCoefficients.kd);
-    gl.uniform3fv(ksLoc, this.lightingCoefficients.ks);
-    gl.uniform1f(specularExponentLoc, this.specularExponent);
+    gl.uniformMatrix4fv(this.modelMatrixLoc, false, this.modelMatrix);
+
+    gl.uniform3fv(this.kaLoc, this.lightingCoefficients.ka);
+    gl.uniform3fv(this.kdLoc, this.lightingCoefficients.kd);
+    gl.uniform3fv(this.ksLoc, this.lightingCoefficients.ks);
+    gl.uniform1f(this.specularExponentLoc, this.specularExponent);
   }
 
   render() {
+    gl.useProgram(this.shader);
+
     // Link data in VBO to shader variables
     gl.bindBuffer(gl.ARRAY_BUFFER, this.posVBO);
-    gl.enableVertexAttribArray(posLoc);
-    gl.enableVertexAttribArray(normalLoc);
-    // DONE: Passe Stride-Wert an (vorletzter Parameter)
-    // -> Vertex-Position und -Normale werden abwechselnd gespeichert
-    gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 2 * 3 * 4, 0);
-    gl.vertexAttribPointer(normalLoc, 3, gl.FLOAT, false, 2 * 3 * 4, 3 * 4);
+    gl.enableVertexAttribArray(this.posLoc);
+    gl.enableVertexAttribArray(this.normalLoc);
+    gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 2 * 3 * 4, 0);
+    gl.vertexAttribPointer(
+      this.normalLoc,
+      3,
+      gl.FLOAT,
+      false,
+      2 * 3 * 4,
+      3 * 4
+    );
 
     this.updateUniforms();
 
@@ -94,8 +125,8 @@ class Object3D {
 }
 
 class Island extends Object3D {
-  constructor() {
-    super({
+  constructor(program) {
+    super(program, {
       ka: [0.4, 0.2, 0.0],
       kd: [0.6, 0.3, 0.0],
       ks: [0.7, 0.7, 0.7],
@@ -789,8 +820,12 @@ class Island extends Object3D {
 }
 
 class River extends Object3D {
-  constructor() {
-    super({ ka: [0.0, 0.0, 0.5], kd: [0, 0, 0.8], ks: [0.9, 0.67, 0.2] });
+  constructor(program) {
+    super(program, {
+      ka: [0.0, 0.0, 0.5],
+      kd: [0, 0, 0.8],
+      ks: [0.9, 0.67, 0.2],
+    });
 
     // prettier-ignore
     this.positions = [
@@ -841,8 +876,12 @@ class River extends Object3D {
 }
 
 class Tree extends Object3D {
-  constructor() {
-    super({ ka: [0.2, 0.5, 0.0], kd: [0.4, 0.8, 0.2], ks: [0.6, 0.9, 0.2] });
+  constructor(program) {
+    super(program, {
+      ka: [0.2, 0.5, 0.0],
+      kd: [0.4, 0.8, 0.2],
+      ks: [0.6, 0.9, 0.2],
+    });
 
     // prettier-ignore
     this.positions = [
@@ -2270,8 +2309,12 @@ class Tree extends Object3D {
 }
 
 class Cloud extends Object3D {
-  constructor() {
-    super({ ka: [0.9, 0.9, 0.9], kd: [0.9, 0.9, 0.9], ks: [1.0, 1.0, 1.0] });
+  constructor(program) {
+    super(program, {
+      ka: [0.9, 0.9, 0.9],
+      kd: [0.9, 0.9, 0.9],
+      ks: [1.0, 1.0, 1.0],
+    });
 
     // prettier-ignore
     this.positions = [
@@ -4724,8 +4767,8 @@ class Cloud extends Object3D {
 }
 
 class Sun extends Object3D {
-  constructor() {
-    super({ ka: [1, 0.8, 0.0], kd: [1, 0.8, 0.0], ks: [1, 0.8, 0.0] });
+  constructor(program) {
+    super(program, { ka: [1, 0.8, 0.0], kd: [1, 0.8, 0.0], ks: [1, 0.8, 0.0] });
 
     // prettier-ignore
     this.positions = [

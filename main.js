@@ -1,5 +1,5 @@
 let gl;
-let program;
+let defaultProgram;
 let canvas;
 const { vec3, mat4 } = glMatrix;
 const { toRadian } = glMatrix.glMatrix;
@@ -8,7 +8,7 @@ let viewMatrix, projectionMatrix;
 let eye, target, up;
 
 let objects = [];
-let posLoc, normalLoc, modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
+let viewMatrixLoc, projectionMatrixLoc;
 
 let lightPosition,
   lightPositionLoc,
@@ -44,8 +44,8 @@ function main() {
   gl.enable(gl.DEPTH_TEST);
 
   // Init shader program via additional function and bind it
-  program = initShaders(gl, "vertex-shader", "fragment-shader");
-  gl.useProgram(program);
+  defaultProgram = initShaders(gl, "vertex-shader", "fragment-shader");
+  gl.useProgram(defaultProgram);
 
   setupMatrices();
   setupObjects();
@@ -62,29 +62,6 @@ function main() {
 }
 
 function setupMatrices() {
-  // Get locations of shader variables
-  posLoc = gl.getAttribLocation(program, "vPosition");
-  normalLoc = gl.getAttribLocation(program, "vNormal");
-
-  modelMatrixLoc = gl.getUniformLocation(program, "uModelMatrix");
-  viewMatrixLoc = gl.getUniformLocation(program, "uViewMatrix");
-  projectionMatrixLoc = gl.getUniformLocation(program, "uProjectionMatrix");
-
-  lightPositionLoc = gl.getUniformLocation(program, "lightPosition");
-  IaLoc = gl.getUniformLocation(program, "Ia");
-  IdLoc = gl.getUniformLocation(program, "Id");
-  IsLoc = gl.getUniformLocation(program, "Is");
-  kaLoc = gl.getUniformLocation(program, "ka");
-  kdLoc = gl.getUniformLocation(program, "kd");
-  ksLoc = gl.getUniformLocation(program, "ks");
-  specularExponentLoc = gl.getUniformLocation(program, "specExp");
-
-  lightPosition = [1.0, 2.0, 1.0];
-  gl.uniform3fv(lightPositionLoc, lightPosition);
-  gl.uniform3fv(IaLoc, [0.3, 0.3, 0.3]);
-  gl.uniform3fv(IdLoc, [0.8, 0.8, 0.8]);
-  gl.uniform3fv(IsLoc, [0.7, 0.7, 0.7]);
-
   eye = vec3.fromValues(0.0, 1.0, 6);
   target = vec3.fromValues(0.0, 1.0, 0.0);
   up = vec3.fromValues(0.0, 1.0, 0.0);
@@ -99,22 +76,22 @@ function setupMatrices() {
     0.5,
     100.0
   );
-
-  gameLoop();
 }
 
 function setupObjects() {
-  const island = new Island();
-  const river = new River();
-  const sun = new Sun();
+  lightPosition = [1.0, 2.0, 1.0];
 
-  const treeInFrontLeft = new Tree();
-  const treeInFrontRight = new Tree();
-  const treeInBackMiddle = new Tree();
+  const island = new Island(defaultProgram);
+  const river = new River(defaultProgram);
+  const sun = new Sun(defaultProgram);
 
-  const cloudBehindIsland = new Cloud();
-  const cloudOutsideIsland = new Cloud();
-  const cloudOverIsland = new Cloud();
+  const treeInFrontLeft = new Tree(defaultProgram);
+  const treeInFrontRight = new Tree(defaultProgram);
+  const treeInBackMiddle = new Tree(defaultProgram);
+
+  const cloudBehindIsland = new Cloud(defaultProgram);
+  const cloudOutsideIsland = new Cloud(defaultProgram);
+  const cloudOverIsland = new Cloud(defaultProgram);
 
   river.setModelMatrix({
     position: [0, 0.04, 1.8],
@@ -167,6 +144,20 @@ function setupObjects() {
     cloudOutsideIsland,
     cloudOverIsland
   );
+
+  for (let object of objects) {
+    gl.useProgram(object.shader);
+
+    // Set view and projection matrix
+    gl.uniformMatrix4fv(object.viewMatrixLoc, false, viewMatrix);
+    gl.uniformMatrix4fv(object.projectionMatrixLoc, false, projectionMatrix);
+
+    // Set position und intensity of the light source
+    gl.uniform3fv(object.lightPositionLoc, lightPosition);
+    gl.uniform3fv(object.IaLoc, [0.4, 0.4, 0.4]);
+    gl.uniform3fv(object.IdLoc, [0.8, 0.8, 0.8]);
+    gl.uniform3fv(object.IsLoc, [1.0, 1.0, 1.0]);
+  }
 }
 
 function keyCameraMovementXZ({ key }) {
@@ -226,7 +217,6 @@ function dragCameraMovementXZ({ movementX, movementY }) {
 
 function rotateCameraY(angle) {
   vec3.rotateY(target, target, eye, angle);
-  mat4.lookAt(viewMatrix, eye, target, up);
 }
 
 function moveCamera(direction, speed = 1) {
@@ -256,14 +246,15 @@ function moveCamera(direction, speed = 1) {
 function updateView() {
   mat4.lookAt(viewMatrix, eye, target, up);
 
-  gl.uniformMatrix4fv(viewMatrixLoc, false, viewMatrix);
-  gl.uniformMatrix4fv(projectionMatrixLoc, false, projectionMatrix);
+  for (let object of objects) {
+    gl.useProgram(object.shader);
+    gl.uniformMatrix4fv(object.viewMatrixLoc, false, viewMatrix);
+  }
 }
 
 function render() {
   // Only clear once
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
   objects.forEach((o) => o.render());
 }
 
