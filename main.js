@@ -58,7 +58,7 @@ function main() {
   canvas.addEventListener("mousemove", dragCameraMovementXZ);
   canvas.addEventListener("wheel", scrollCameraMovementZ, true);
 
-  render();
+  gameLoop();
 }
 
 function setupMatrices() {
@@ -100,7 +100,7 @@ function setupMatrices() {
     1000.0
   );
 
-  updateUniforms();
+  gameLoop();
 }
 
 function setupObjects() {
@@ -167,19 +167,6 @@ function setupObjects() {
     cloudOutsideIsland,
     cloudOverIsland
   );
-}
-
-function render() {
-  // Only clear once
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  objects.forEach((o) => o.render());
-  updateUniforms();
-  requestAnimationFrame(render);
-}
-
-function updateUniforms() {
-  gl.uniformMatrix4fv(viewMatrixLoc, false, viewMatrix);
-  gl.uniformMatrix4fv(projectionMatrixLoc, false, projectionMatrix);
 }
 
 function keyCameraMovementXZ({ key }) {
@@ -264,8 +251,26 @@ function moveCamera(direction, speed = 1) {
     target[0] -= movement[2];
     target[2] += movement[0];
   }
+}
 
+function updateView() {
   mat4.lookAt(viewMatrix, eye, target, up);
+
+  gl.uniformMatrix4fv(viewMatrixLoc, false, viewMatrix);
+  gl.uniformMatrix4fv(projectionMatrixLoc, false, projectionMatrix);
+}
+
+function render() {
+  // Only clear once
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  objects.forEach((o) => o.render());
+}
+
+function gameLoop() {
+  updateView();
+  render();
+  requestAnimationFrame(gameLoop);
 }
 
 main();
