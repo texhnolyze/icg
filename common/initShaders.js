@@ -1,8 +1,18 @@
 //
 //  initShaders.js
 //
+async function readFile(file) {
+  let result_base64 = await new Promise((resolve) => {
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", (data) => resolve(data.target.response));
+    xhr.open("GET", file);
+    xhr.send();
+  });
 
-function initShaders(gl, vertexShaderId, fragmentShaderId) {
+  return result_base64;
+}
+
+async function initShaders(gl, vertexShaderFilename, fragmentShaderFilename) {
   const compileShader = (gl, gl_shaderType, shaderSource) => {
     // Create the shader
     shader = gl.createShader(gl_shaderType);
@@ -25,8 +35,8 @@ function initShaders(gl, vertexShaderId, fragmentShaderId) {
   /*
    * Setup shader program
    */
-  vShaderSource = document.querySelector("#" + vertexShaderId).text;
-  fShaderSource = document.querySelector("#" + fragmentShaderId).text;
+  vShaderSource = await readFile(vertexShaderFilename);
+  fShaderSource = await readFile(fragmentShaderFilename);
 
   vertexShader = compileShader(gl, gl.VERTEX_SHADER, vShaderSource);
   fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
@@ -42,4 +52,3 @@ function initShaders(gl, vertexShaderId, fragmentShaderId) {
 
   return program;
 }
-

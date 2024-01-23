@@ -32,7 +32,7 @@ const MOVEMENT_DIRECTION = {
   LEFT: 3,
 };
 
-function main() {
+async function main() {
   // Get canvas and setup WebGL context
   canvas = document.getElementById("gl-canvas");
   gl = canvas.getContext("webgl2");
@@ -44,7 +44,11 @@ function main() {
   gl.enable(gl.DEPTH_TEST);
 
   // Init shader program via additional function and bind it
-  defaultProgram = initShaders(gl, "vertex-shader", "fragment-shader");
+  defaultProgram = await initShaders(
+    gl,
+    "shaders/default.vert.glsl",
+    "shaders/default.frag.glsl"
+  );
   gl.useProgram(defaultProgram);
 
   setupMatrices();
@@ -264,4 +268,6 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-main();
+window.onload = async function () {
+  main();
+};
