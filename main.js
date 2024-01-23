@@ -41,6 +41,11 @@ async function main() {
     "shaders/default.vert.glsl",
     "shaders/default.frag.glsl"
   );
+  waterProgram = await initShaders(
+    gl,
+    "shaders/water.vert.glsl",
+    "shaders/water.frag.glsl"
+  );
   gl.useProgram(defaultProgram);
 
   setupMatrices();
@@ -58,8 +63,8 @@ async function main() {
 }
 
 function setupMatrices() {
-  eye = vec3.fromValues(0.0, 1.0, 6);
-  target = vec3.fromValues(0.0, 1.0, 0.0);
+  eye = vec3.fromValues(0.0, 0.4, 6);
+  target = vec3.fromValues(0.0, 0.4, 0.0);
   up = vec3.fromValues(0.0, 1.0, 0.0);
 
   viewMatrix = mat4.create();
@@ -88,6 +93,8 @@ function setupObjects() {
   const cloudBehindIsland = new Cloud(defaultProgram);
   const cloudOutsideIsland = new Cloud(defaultProgram);
   const cloudOverIsland = new Cloud(defaultProgram);
+
+  const sea = new Sea(waterProgram);
 
   river.setModelMatrix({
     position: [0, 0.04, 1.8],
@@ -138,7 +145,8 @@ function setupObjects() {
     treeInBackMiddle,
     cloudBehindIsland,
     cloudOutsideIsland,
-    cloudOverIsland
+    cloudOverIsland,
+    sea
   );
 
   for (let object of objects) {

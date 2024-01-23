@@ -106,6 +106,7 @@ class Object3D {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.posVBO);
     gl.enableVertexAttribArray(this.posLoc);
     gl.enableVertexAttribArray(this.normalLoc);
+
     gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 2 * 3 * 4, 0);
     gl.vertexAttribPointer(
       this.normalLoc,
@@ -5212,4 +5213,111 @@ class Sun extends Object3D {
 
     this.initBuffers();
   }
+}
+
+class Sea extends Object3D {
+  constructor(program) {
+    super(program, {
+      ka: [0.2, 0.2, 1.0, 1.0],
+      kd: [0.4, 0.4, 0.8, 1.0],
+      ks: [0.5, 0.5, 0.9, 1.0],
+    });
+
+    this.textureCoordinatesLoc = gl.getAttribLocation(
+      this.shader,
+      "vTextureCoordinates"
+    );
+    this.diffuseMapLoc = gl.getUniformLocation(this.shader, "diffuseMap");
+    // TODO 1.3: Hole Speicheradresse der Normal-Map-Shadervariable.
+    this.normalMapLoc = gl.getUniformLocation(this.shader, "normalMap");
+
+    for (let i = -10; i < 10; i += 0.5) {
+      for (let j = -10; j < 10; j += 0.5) {
+        let firstIndex = this.positions.length / 8;
+        this.indices.push(firstIndex, firstIndex + 1, firstIndex + 2);
+        this.indices.push(firstIndex + 2, firstIndex + 1, firstIndex + 3);
+
+        this.positions.push(i, -0.3, j, 0, 1, 0, 0, 0);
+        this.positions.push(i + 0.5, -0.3, j, 0, 1, 0, 1, 0);
+        this.positions.push(i, -0.3, j + 0.5, 0, 1, 0, 0, 1);
+        this.positions.push(i + 0.5, -0.3, j + 0.5, 0, 1, 0, 1, 1);
+      }
+    }
+
+    this.handleTextures();
+  }
+
+  async handleTextures() {
+    this.diffuseTexture = gl.createTexture();
+    const waterImage = await loadImage("water_diffuse.jpg");
+    handleTexture(waterImage, this.diffuseTexture);
+
+    // TODO 1.1: Erstelle analog zu diffuser Textur eine Normal Map für das Meer.
+    this.normalTexture = gl.createTexture();
+    const waterNormalImage = await loadImage("water_normal.jpg");
+    handleTexture(waterNormalImage, this.normalTexture);
+
+    this.initBuffers();
+  }
+
+  render() {
+    // Link data in VBO to shader variables
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.posVBO);
+    gl.enableVertexAttribArray(this.posLoc);
+    gl.enableVertexAttribArray(this.normalLoc);
+    gl.enableVertexAttribArray(this.texCoordLoc);
+
+    gl.useProgram(this.shader);
+
+    // Link data in VBO to shader variables
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.posVBO);
+    gl.enableVertexAttribArray(this.posLoc);
+    gl.enableVertexAttribArray(this.normalLoc);
+    gl.enableVertexAttribArray(this.textureCoordinatesLoc);
+
+    gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 8 * 4, 0);
+    gl.vertexAttribPointer(this.normalLoc, 3, gl.FLOAT, false, 8 * 4, 3 * 4);
+    gl.vertexAttribPointer(
+      this.textureCoordinatesLoc,
+      2,
+      gl.FLOAT,
+      false,
+      8 * 4,
+      6 * 4
+    );
+
+    this.updateUniforms();
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.diffuseTexture);
+    gl.uniform1i(this.diffuseMapLoc, 0);
+
+    // TODO 1.4: Verknüpfe Normal Map analog zu diffuser Map mit Shader.
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.normalTexture);
+    gl.uniform1i(this.normalMapLoc, 1);
+
+    // Render
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexVBO);
+    gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0);
+  }
+}
+
+async function loadImage(path) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous"; // to avoid CORS if used with Canvas
+    img.src = path;
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+  });
+}
+
+function handleTexture(image, texture) {
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.bindTexture(gl.TEXTURE_2D, null);
 }
